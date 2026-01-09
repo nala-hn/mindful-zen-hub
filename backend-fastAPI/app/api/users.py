@@ -11,6 +11,7 @@ router = APIRouter(prefix="/users", tags=["Users Management"])
 
 class UserUpdate(BaseModel):
     email: Optional[EmailStr] = None
+    name: Optional[str] = None
     role: Optional[str] = None
 
 @router.get("/browse")
@@ -24,6 +25,7 @@ async def browse(
         {
             "id": str(u.id), 
             "email": u.email, 
+            "name": u.name,
             "role": u.role, 
             "streak": u.current_streak,
             "avatar_status": u.avatar_status
@@ -63,6 +65,7 @@ async def browse_detail(
         data={
             "id": str(user.id),
             "email": user.email,
+            "name": user.name,
             "role": user.role,
             "streak": user.current_streak,
             "avatar_status": user.avatar_status
