@@ -29,7 +29,7 @@ async def create(
         str(current_user.id)
     )
 
-    return universal_response("Success", "Berhasil menyimpan syukur", str(request.url.path), 201, {"id": str(new_gratitude.id)})
+    return universal_response("Success", "Berhasil menyimpan syukur", str(request.url.path), 201, new_gratitude)
 
 @router.get("/browse")
 async def browse(
@@ -44,36 +44,28 @@ async def browse(
     return universal_response("Success", "Daftar syukur ditemukan", str(request.url.path), 200, data)
 
 @router.put("/update/{id}")
-async def update(
-    id: str,
-    data: GratitudeUpdate,
-    request: Request,
-    db: Session = Depends(get_db),
-    current_user = Depends(get_current_user)
-):
-    item = db.query(Gratitude).filter(Gratitude.id == id, Gratitude.user_id == str(current_user.id)).first()
+async def update(id: str, data: GratitudeUpdate, request: Request, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
+    gratitude = db.query(Gratitude).filter(Gratitude.id == id, Gratitude.user_id == str(current_user.id)).first()
     
-    if not item:
+    if not gratitude:
         return universal_response("Error", "Data tidak ditemukan atau bukan milik Anda", str(request.url.path), 404)
 
-    item.content = data.content
+    gratitude.content = data.content
     db.commit()
+    db.refresh(gratitude)
     
-    return universal_response("Success", "Rasa syukur diperbarui", str(request.url.path), 200)
+    return universal_response("Success", "Rasa syukur diperbarui", str(request.url.path), 200, gratitude)
 
 @router.delete("/delete/{id}")
-async def delete(
-    id: str,
-    request: Request,
-    db: Session = Depends(get_db),
-    current_user = Depends(get_current_user)
-):
-    item = db.query(Gratitude).filter(Gratitude.id == id, Gratitude.user_id == str(current_user.id)).first()
+async def delete(id: str, request: Request, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
+    gratitude = db.query(Gratitude).filter(Gratitude.id == id, Gratitude.user_id == str(current_user.id)).first()
     
-    if not item:
+    if not gratitude:
         return universal_response("Error", "Data tidak ditemukan", str(request.url.path), 404)
 
-    db.delete(item)
+    temp_data = {"id": str(gratitude.id), "content": gratitude.content}
+    
+    db.delete(gratitude)
     db.commit()
     
-    return universal_response("Success", "Data berhasil dihapus", str(request.url.path), 200)
+    return universal_response("Success", "Data berhasil dihapus", str(request.url.path), 200, temp_data)

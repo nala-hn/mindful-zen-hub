@@ -24,7 +24,7 @@ async def create(data: CMSCreate, request: Request, db: Session = Depends(get_db
     db.add(new_content)
     db.commit()
     db.refresh(new_content)
-    return universal_response("Success", "Konten berhasil dibuat", str(request.url.path), 201, {"id": str(new_content.id)})
+    return universal_response("Success", "Konten berhasil dibuat", str(request.url.path), 201, new_content)
 
 @router.put("/update/{id}")
 async def update(id: str, data: CMSUpdate, request: Request, db: Session = Depends(get_db), admin = Depends(get_admin_user)):
@@ -32,13 +32,14 @@ async def update(id: str, data: CMSUpdate, request: Request, db: Session = Depen
     if not content:
         return universal_response("Error", "Konten tidak ditemukan", str(request.url.path), 404)
 
-    if data.content_type: content.content_type = data.content_type
-    if data.text_body: content.text_body = data.text_body
-    if data.mood_category: content.mood_category = data.mood_category
-    if data.scheduled_date: content.scheduled_date = data.scheduled_date
+    if data.content_type is not None: content.content_type = data.content_type
+    if data.text_body is not None: content.text_body = data.text_body
+    if data.mood_category is not None: content.mood_category = data.mood_category
+    if data.scheduled_date is not None: content.scheduled_date = data.scheduled_date
 
     db.commit()
-    return universal_response("Success", "Konten berhasil diperbarui", str(request.url.path), 200)
+    db.refresh(content)
+    return universal_response("Success", "Konten berhasil diperbarui", str(request.url.path), 200, content)
 
 @router.delete("/delete/{id}")
 async def delete(id: str, request: Request, db: Session = Depends(get_db), admin = Depends(get_admin_user)):

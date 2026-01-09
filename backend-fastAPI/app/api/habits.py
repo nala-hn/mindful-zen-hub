@@ -21,7 +21,7 @@ async def create_habit(data: HabitCreate, request: Request, db: Session = Depend
     db.add(new_habit)
     db.commit()
     db.refresh(new_habit)
-    return universal_response("Success", "Habit berhasil dibuat", str(request.url.path), 201, {"id": new_habit.id})
+    return universal_response("Success", "Habit berhasil dibuat", str(request.url.path), 201, new_habit)
 
 @router.get("/browse")
 async def browse_habits(request: Request, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
@@ -34,62 +34,50 @@ async def log_habit(habit_id: str, request: Request, db: Session = Depends(get_d
     db.add(new_log)
     
     total_done = db.query(HabitLog).join(Habit).filter(Habit.user_id == str(current_user.id), HabitLog.status == True).count()
-    
     new_status = check_avatar_evolution(total_done)
     
     if current_user.avatar_status != new_status:
         current_user.avatar_status = new_status
         db.commit()
-        
         await manager.send_personal_message(
-            {
-                "event": "AVATAR_EVOLVED",
-                "new_status": new_status,
-                "message": f"Wohoo! Evolusi menjadi {new_status}!"
-            }, 
+            {"event": "AVATAR_EVOLVED", "new_status": new_status, "message": f"Wohoo! Evolusi menjadi {new_status}!"}, 
             str(current_user.id)
         )
 
     db.commit()
-    return universal_response("Success", "Progress dicatat", str(request.url.path), 200, {"total_done": total_done, "avatar": new_status})
+    db.refresh(new_log)
+
+    return universal_response("Success", "Progress dicatat", str(request.url.path), 200, {
+        "log": new_log, 
+        "total_done": total_done, 
+        "current_avatar": new_status
+    })
 
 @router.put("/update/{habit_id}")
-async def update_habit(
-    habit_id: str,
-    data: HabitUpdate,
-    request: Request,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    habit = db.query(Habit).filter(Habit.id == habit_id, Habit.user_id == str(current_user.id)).first()
-    
-    if not habit:
-        return universal_response("Error", "Habit tidak ditemukan atau Anda tidak memiliki akses", str(request.url.path), 404)
-
-    if data.title is not None:
-        habit.title = data.title
-    if data.is_from_library is not None:
-        habit.is_from_library = data.is_from_library
-
-    db.commit()
-    db.refresh(habit)
-    
-    return universal_response("Success", "Habit berhasil diperbarui", str(request.url.path), 200, {"id": habit.id, "title": habit.title})
-
-
-@router.delete("/delete/{habit_id}")
-async def delete_habit(
-    habit_id: str,
-    request: Request,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
+async def update_habit(habit_id: str, data: HabitUpdate, request: Request, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     habit = db.query(Habit).filter(Habit.id == habit_id, Habit.user_id == str(current_user.id)).first()
     
     if not habit:
         return universal_response("Error", "Habit tidak ditemukan", str(request.url.path), 404)
 
+    if data.title is not None: habit.title = data.title
+    if data.is_from_library is not None: habit.is_from_library = data.is_from_library
+
+    db.commit()
+    db.refresh(habit)
+    
+    return universal_response("Success", "Habit berhasil diperbarui", str(request.url.path), 200, habit)
+
+@router.delete("/delete/{habit_id}")
+async def delete_habit(habit_id: str, request: Request, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    habit = db.query(Habit).filter(Habit.id == habit_id, Habit.user_id == str(current_user.id)).first()
+    
+    if not habit:
+        return universal_response("Error", "Habit tidak ditemukan", str(request.url.path), 404)
+
+    temp_data = {"id": str(habit.id), "title": habit.title}
+    
     db.delete(habit)
     db.commit()
     
-    return universal_response("Success", "Habit dan data log terkait berhasil dihapus", str(request.url.path), 200)
+    return universal_response("Success", "Habit berhasil dihapus", str(request.url.path), 200, temp_data)

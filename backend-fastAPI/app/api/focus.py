@@ -1,4 +1,5 @@
 import asyncio
+import uuid
 from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
 from app.database.session import get_db
@@ -24,10 +25,18 @@ async def browse(request: Request, db: Session = Depends(get_db), current_user =
 
 @router.get("/browse-detail/{id}")
 async def browse_detail(id: str, request: Request, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
-    session = db.query(FocusSession).filter(FocusSession.id == id, FocusSession.user_id == str(current_user.id)).first()
+    try:
+        target_uuid = uuid.UUID(id)
+    except ValueError:
+        return universal_response("Error", "Format ID tidak valid", str(request.url.path), 400)
+
+    session = db.query(FocusSession).filter(
+        FocusSession.id == target_uuid, 
+        FocusSession.user_id == current_user.id
+    ).first()
     
     if not session:
-        return universal_response("Error", "Sesi tidak ditemukan", str(request.url.path), 404)
+        return universal_response("Error", "Sesi tidak ditemukan atau Anda tidak memiliki akses", str(request.url.path), 404)
         
     return universal_response("Success", "Detail sesi ditemukan", str(request.url.path), 200, session)
 
@@ -35,9 +44,9 @@ async def browse_detail(id: str, request: Request, db: Session = Depends(get_db)
 async def create(data: FocusCreate, request: Request, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     new_session = FocusSession(
         user_id=str(current_user.id),
-        task_name=data.task_name,
         duration_minutes=data.duration_minutes,
-        is_completed=False
+        session_type=data.task_name,
+        status="completed"
     )
     db.add(new_session)
     db.commit()
@@ -51,32 +60,42 @@ async def create(data: FocusCreate, request: Request, db: Session = Depends(get_
             await manager.send_personal_message({"event": "FOCUS_TICK", "seconds_left": left}, user_id)
         
         with next(get_db()) as db_conn:
-            db_conn.query(FocusSession).filter(FocusSession.id == session_id).update({"is_completed": True})
+            db_conn.query(FocusSession).filter(FocusSession.id == session_id).update({
+                "status": "completed"
+            })
             db_conn.commit()
         await manager.send_personal_message({"event": "FOCUS_DONE", "message": "Selesai!"}, user_id)
 
     asyncio.create_task(run_timer(str(current_user.id), data.duration_minutes * 60, str(new_session.id)))
 
-    return universal_response("Success", "Sesi fokus dimulai", str(request.url.path), 201, {"id": new_session.id})
+    return universal_response("Success", "Sesi fokus dimulai", str(request.url.path), 201, new_session)
 
 @router.put("/update/{id}")
-async def update(id: str, data: FocusUpdate, request: Request, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
-    session = db.query(FocusSession).filter(FocusSession.id == id, FocusSession.user_id == str(current_user.id)).first()
+async def update(
+    id: str, 
+    data: FocusUpdate, 
+    request: Request, 
+    db: Session = Depends(get_db), 
+    current_user = Depends(get_current_user)
+):
+    session = db.query(FocusSession).filter(
+        FocusSession.id == id, 
+        FocusSession.user_id == str(current_user.id)
+    ).first()
+
     if not session:
         return universal_response("Error", "Data tidak ditemukan", str(request.url.path), 404)
 
-    if data.task_name: session.task_name = data.task_name
-    if data.is_completed is not None: session.is_completed = data.is_completed
+    if data.session_type is not None: 
+        session.session_type = data.session_type
+        
+    if hasattr(data, 'status') and data.status is not None:
+        session.status = data.status
     
-    db.commit()
-    return universal_response("Success", "Sesi diperbarui", str(request.url.path), 200)
+    if hasattr(data, 'duration_minutes') and data.duration_minutes is not None:
+        session.duration_minutes = data.duration_minutes
 
-@router.delete("/delete/{id}")
-async def delete(id: str, request: Request, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
-    session = db.query(FocusSession).filter(FocusSession.id == id, FocusSession.user_id == str(current_user.id)).first()
-    if not session:
-        return universal_response("Error", "Data tidak ditemukan", str(request.url.path), 404)
-
-    db.delete(session)
     db.commit()
-    return universal_response("Success", "Sesi dihapus", str(request.url.path), 200)
+    db.refresh(session)
+    
+    return universal_response("Success", "Sesi berhasil diperbarui", str(request.url.path), 200, session)

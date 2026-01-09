@@ -48,7 +48,7 @@ async def get_dashboard_overview(
 
     focus_today = db.query(func.sum(FocusSession.duration_minutes)).filter(
         FocusSession.user_id == str(current_user.id),
-        FocusSession.is_completed == True,
+        FocusSession.status == "completed",
         func.date(FocusSession.created_at) == today
     ).scalar() or 0
 

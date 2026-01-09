@@ -17,6 +17,6 @@ class FocusResponse(BaseModel):
         from_attributes = True
         
 class FocusUpdate(BaseModel):
-    task_name: Optional[str] = None
+    session_type: Optional[str] = None
     is_completed: Optional[bool] = None
     duration_minutes: Optional[int] = None
