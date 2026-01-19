@@ -27,6 +27,9 @@ export const apiService = {
   getHabitsByDate: (date: string) => 
   api.get(`/habits/browse?filter_date=${date}`),
 
+  updateHabitStatus: (habitId: string, payload: any) => 
+  api.put(`/habits/update/${habitId}`, payload),
+
   getHabitLogs: (userId: string, date: string) => 
     api.get(`/habit-logs/browse-date/${userId}?date=${date}`),
 
