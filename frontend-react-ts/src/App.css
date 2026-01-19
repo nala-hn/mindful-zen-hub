@@ -1,0 +1,20 @@
+@import "tailwindcss";
+@source "../.flowbite-react/class-list.json";
+@source "../node_modules/flowbite-react/dist/esm/**/*.mjs";
+@source "./**/*.{js,jsx,ts,tsx}";
+@import "flowbite-react/plugin/tailwindcss";
+
+@theme {
+  --color-primary-50: #eff6ff;
+  --color-primary-500: #3b82f6;
+  --color-primary-900: #1e3a8a;
+  --color-purple-600: #7e22ce;
+  --color-purple-700: #6b21a8;
+}
+
+/* Base styles */
+@layer base {
+  body {
+    @apply bg-gray-50 text-gray-900;
+  }
+}
