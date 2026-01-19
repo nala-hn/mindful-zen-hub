@@ -10,30 +10,30 @@ export interface UserData {
 }
 
 export const apiService = {
-  login: (formData: URLSearchParams) => 
+  login: (formData: URLSearchParams) =>
     api.post('/auth/login', formData, {
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
     }),
 
-  getUserDetail: (userId: string) => 
+  getUserDetail: (userId: string) =>
     api.get(`/users/browse-detail/${userId}`),
 
-  createHabit: (title: string) => 
-  api.post('/habits/create', {
-    title: title,
-    is_from_library: null
-  }),
+  createHabit: (title: string) =>
+    api.post('/habits/create', {
+      title: title,
+      is_from_library: null
+    }),
 
-  getHabitsByDate: (date: string) => 
-  api.get(`/habits/browse?filter_date=${date}`),
+  getHabitsByDate: (date: string) =>
+    api.get(`/habits/browse?filter_date=${date}`),
 
-  updateHabitStatus: (habitId: string, payload: any) => 
-  api.put(`/habits/update/${habitId}`, payload),
+  updateHabitStatus: (habitId: string, payload: any) =>
+    api.put(`/habits/update/${habitId}`, payload),
 
-  deleteHabit: (habitId: string) => 
-  api.delete(`/habits/delete/${habitId}`),
+  deleteHabit: (habitId: string) =>
+    api.delete(`/habits/delete/${habitId}`),
 
-  getHabitLogs: (userId: string, date: string) => 
+  getHabitLogs: (userId: string, date: string) =>
     api.get(`/habit-logs/browse-date/${userId}?date=${date}`),
 
   checkHabit: (habitId: string, userId: string, date: string) =>
@@ -44,15 +44,18 @@ export const apiService = {
       is_completed: true
     }),
 
-  getGratitude: (userId: string, date: string) =>
-    api.get(`/gratitude/browse-date/${userId}?date=${date}`),
+  createGratitude: (content: string) =>
+    api.post('/gratitude/create', { content }),
 
-  createGratitude: (data: { user_id: string; content: string; date: string }) =>
-    api.post('/gratitude/create', data),
+  getGratitude: (date: string) =>
+    api.get(`/gratitude/browse?filter_date=${date}`),
+
+  updateGratitude: (id: string, content: string) =>
+    api.put(`/gratitude/update/${id}`, { content }),
 
   startFocusSession: (data: { user_id: string; duration: number; task_name: string }) =>
     api.post('/focus/create', data),
 
-  getDailyQuote: () => 
+  getDailyQuote: () =>
     api.get('/cms/browse-all'),
 };

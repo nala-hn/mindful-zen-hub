@@ -7,6 +7,7 @@ import ZenkichiAvatar from '../components/ZenkichiAvatar';
 import { useAuthStore } from '../store/authStore';
 import { apiService } from '../api/endpoints';
 import ConfirmModal from '../components/ConfirmModal';
+import GratitudeJournal from '../components/GratitudeJournal';
 
 const DashboardPage: React.FC = () => {
   const { user } = useAuthStore();
@@ -191,6 +192,8 @@ const DashboardPage: React.FC = () => {
             </div>
           )}
         </section>
+
+        <GratitudeJournal selectedDate={selectedDate} />
       </div>
 
       <HabitModal

@@ -6,6 +6,9 @@ from app.schemas.gratitude_schema import GratitudeCreate, GratitudeUpdate
 from app.core.security import get_current_user
 from app.core.response import universal_response
 from app.core.websocket import manager
+from sqlalchemy import func
+from datetime import date
+from typing import Optional
 
 router = APIRouter(prefix="/gratitude", tags=["Gratitude"])
 
@@ -34,10 +37,16 @@ async def create(
 @router.get("/browse")
 async def browse(
     request: Request,
+    filter_date: Optional[date] = None,
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
-    results = db.query(Gratitude).filter(Gratitude.user_id == str(current_user.id)).order_by(Gratitude.created_at.desc()).all()
+    query = db.query(Gratitude).filter(Gratitude.user_id == str(current_user.id))
+    
+    if filter_date:
+        query = query.filter(func.date(Gratitude.created_at) == filter_date)
+        
+    results = query.order_by(Gratitude.created_at.desc()).all()
     
     data = [{"id": str(g.id), "content": g.content, "created_at": g.created_at} for g in results]
     
