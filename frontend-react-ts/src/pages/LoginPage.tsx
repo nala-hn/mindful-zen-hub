@@ -14,13 +14,29 @@ const LoginPage: React.FC = () => {
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
+
         try {
-            const response = await api.post('/auth/login', { email, password });
+            const formData = new URLSearchParams();
+            formData.append('username', email);
+            formData.append('password', password);
+
+            const response = await api.post('/auth/login', formData, {
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                }
+            });
             const { access_token, user } = response.data.data;
+
             setAuth(user, access_token);
-            navigate(user.role === 'admin' ? '/admin/dashboard' : '/dashboard');
-        } catch (error) {
-            alert("Login Gagal! Periksa email dan password-mu.");
+
+            if (user.role === 'admin') {
+                navigate('/admin/dashboard');
+            } else {
+                navigate('/dashboard');
+            }
+        } catch (error: any) {
+            console.error("Login Error Detail:", error.response?.data);
+            alert("Login Gagal! Pastikan email dan password benar.");
         } finally {
             setLoading(false);
         }
@@ -38,7 +54,7 @@ const LoginPage: React.FC = () => {
 
                     <form className="flex flex-col gap-4" onSubmit={handleLogin}>
                         <div>
-                            <Label htmlFor="email"/>
+                            <Label htmlFor="email" />
                             <TextInput
                                 id="email"
                                 type="email"
@@ -49,7 +65,7 @@ const LoginPage: React.FC = () => {
                             />
                         </div>
                         <div>
-                            <Label htmlFor="password"/>
+                            <Label htmlFor="password" />
                             <TextInput
                                 id="password"
                                 type="password"

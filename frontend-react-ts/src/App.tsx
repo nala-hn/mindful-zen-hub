@@ -3,6 +3,8 @@ import './App.css'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
 import { useAuthStore } from './store/authStore';
+import UserLayout from './components/UserLayout';
+import DashboardPage from './pages/DashboardPage';
 
 function App() {
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
@@ -11,11 +13,11 @@ function App() {
     <Router>
       <Routes>
         <Route path="/login" element={!isLoggedIn ? <LoginPage /> : <Navigate to="/dashboard" />} />
-        
-        <Route path="/dashboard" element={isLoggedIn ? <div>Dashboard User</div> : <Navigate to="/login" />} />
-        <Route path="/admin/dashboard" element={isLoggedIn ? <div>Dashboard Admin</div> : <Navigate to="/login" />} />
 
-        <Route path="/" element={<Navigate to="/login" />} />
+        <Route element={<UserLayout />}>
+          <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/" element={<Navigate to="/dashboard" />} />
+        </Route>
       </Routes>
     </Router>
   );

@@ -3,7 +3,7 @@ export interface User {
   name: string;
   email: string;
   role: string;
-  current_streak: number;
+  streak: number;
   avatar_status: string;
   created_at: string;
 }
@@ -13,7 +13,7 @@ export interface Habit {
   user_id: string;
   title: string;
   is_from_library: boolean;
-  current_streak: number;
+  streak: number;
 }
 
 export interface HabitLog {
