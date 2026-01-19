@@ -6,6 +6,7 @@ import HabitModal from '../components/HabitModal';
 import ZenkichiAvatar from '../components/ZenkichiAvatar';
 import { useAuthStore } from '../store/authStore';
 import { apiService } from '../api/endpoints';
+import ConfirmModal from '../components/ConfirmModal';
 
 const DashboardPage: React.FC = () => {
   const { user } = useAuthStore();
@@ -13,6 +14,9 @@ const DashboardPage: React.FC = () => {
   const [habits, setHabits] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [habitToDelete, setHabitToDelete] = useState<any>(null);
+  const [swipedHabitId, setSwipedHabitId] = useState<string | null>(null);
 
   const fetchHabits = useCallback(async () => {
     setLoading(true);
@@ -46,21 +50,22 @@ const DashboardPage: React.FC = () => {
     }
   };
 
-  const [swipedHabitId, setSwipedHabitId] = useState<string | null>(null);
+  const triggerDelete = (habit: any) => {
+    setHabitToDelete(habit);
+    setShowConfirm(true);
+  };
 
-  const handleDeleteHabit = async (habit: any) => {
-    // Safety check tambahan
-    if (habit.complete) return;
-
-    if (window.confirm(`Yakin ingin menghapus habit "${habit.title}"?`)) {
-      try {
-        await apiService.deleteHabit(habit.id);
-        fetchHabits();
-      } catch (err) {
-        console.error("Gagal menghapus habit:", err);
-      } finally {
-        setSwipedHabitId(null);
-      }
+  const confirmDelete = async () => {
+    if (!habitToDelete) return;
+    
+    try {
+      await apiService.deleteHabit(habitToDelete.id);
+      fetchHabits();
+    } catch (err) {
+      console.error("Gagal menghapus:", err);
+    } finally {
+      setHabitToDelete(null);
+      setSwipedHabitId(null);
     }
   };
 
@@ -114,7 +119,7 @@ const DashboardPage: React.FC = () => {
                   {!habit.complete && (
                     <div className="absolute inset-0 flex items-center justify-start pl-6 rounded-[2rem] bg-red-500">
                       <button
-                        onClick={() => handleDeleteHabit(habit)}
+                        onClick={() => triggerDelete(habit)}
                         className="flex items-center gap-2 text-white font-black text-xs tracking-widest"
                       >
                         <HiTrash className="text-xl" />
@@ -192,6 +197,17 @@ const DashboardPage: React.FC = () => {
         show={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSuccess={fetchHabits}
+      />
+
+      <ConfirmModal 
+        show={showConfirm}
+        onClose={() => {
+          setShowConfirm(false);
+          setSwipedHabitId(null); 
+        }}
+        onConfirm={confirmDelete}
+        title="Hapus Habit?"
+        message={`Kamu akan menghapus "${habitToDelete?.title}". Streak kamu untuk habit ini akan hilang.`}
       />
     </div>
   );
