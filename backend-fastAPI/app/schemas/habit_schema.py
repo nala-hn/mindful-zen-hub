@@ -2,19 +2,23 @@ from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime
 
-class HabitCreate(BaseModel):
+class HabitBase(BaseModel):
     title: str
     is_from_library: Optional[bool] = False
 
-class HabitResponse(BaseModel):
+class HabitCreate(HabitBase):
+    pass
+
+class HabitUpdate(HabitBase):
+    title: Optional[str] = None
+    is_from_library: Optional[bool] = None
+
+class Habit(HabitBase):
     id: str
-    title: str
-    is_from_library: bool
+    user_id: str
+    complete: bool
     created_at: datetime
+    current_streak: int
 
     class Config:
         from_attributes = True
-        
-class HabitUpdate(BaseModel):
-    title: Optional[str] = None
-    is_from_library: Optional[bool] = None

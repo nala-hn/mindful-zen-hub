@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Boolean, ForeignKey, Integer, Date
+from sqlalchemy import Column, String, Boolean, ForeignKey, Integer, Date, DateTime, func
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
 from app.database.session import Base
@@ -11,6 +11,8 @@ class Habit(Base):
     title = Column(String, nullable=False)
     is_from_library = Column(Boolean, default=False)
     current_streak = Column(Integer, default=0)
+    complete = Column(Boolean, default=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
 
 class HabitLog(Base):
     __tablename__ = "habit_logs"
