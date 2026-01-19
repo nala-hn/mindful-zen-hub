@@ -6,19 +6,18 @@ import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { apiService } from '../api/endpoints';
 
 const UserLayout: React.FC = () => {
-  const { user, setAuth, logout } = useAuthStore(); 
+  const { user, setAuth, logout, userId } = useAuthStore();
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
     const fetchLatestUserData = async () => {
-      if (user?.id) {
+      if (userId) {
         try {
-          const response = await apiService.getUserDetail(user.id);
+          const response = await apiService.getUserDetail(userId);
           const latestData = response.data.data;
-          const token = localStorage.getItem('access_token') || '';
-          setAuth(latestData, token); 
-          
+          const token = localStorage.getItem('zen_token') || '';
+          setAuth(latestData, token);
           console.log("User data synced:", latestData);
         } catch (err) {
           console.error("Gagal sinkronisasi data user di Layout:", err);
@@ -27,7 +26,7 @@ const UserLayout: React.FC = () => {
     };
 
     fetchLatestUserData();
-  }, []);
+  }, [userId, setAuth]);
 
   const handleLogout = () => {
     logout();
@@ -37,8 +36,8 @@ const UserLayout: React.FC = () => {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
-      <Sidebar aria-label="Zen Sidebar" className="w-64 border-r border-gray-100 shadow-sm bg-white">
+    <div className="flex h-screen bg-purple-50 overflow-hidden">
+      <Sidebar aria-label="Zen Sidebar" className="w-64 sidebar-white [&>div]:!bg-white">
         <div className="px-4 py-6 flex items-center gap-3">
           <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-purple-200">
              <HiViewGridAdd className="text-xl" />
@@ -89,7 +88,7 @@ const UserLayout: React.FC = () => {
       </Sidebar>
 
       <main className="flex-1 flex flex-col overflow-hidden">
-        <header className="h-20 bg-white/80 backdrop-blur-md border-b border-gray-100 px-8 flex justify-between items-center z-10">
+        <header className="h-20 bg-white border-b border-gray-100 px-8 flex justify-between items-center z-10">
           <div>
             <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-0.5">Mindful Zen Hub</p>
             <h1 className="text-xl font-bold text-gray-800 italic">
@@ -107,7 +106,11 @@ const UserLayout: React.FC = () => {
             </div>
             
             <div className="w-10 h-10 rounded-full bg-purple-100 border-2 border-white shadow-sm flex items-center justify-center overflow-hidden">
-               <img src={`https://ui-avatars.com/api/?name=${user?.name || 'User'}&background=A855F7&color=fff`} alt="avatar" />
+              {user?.avatar_status === 'stable' ? (
+                <img src={`https://ui-avatars.com/api/?name=${user?.name || 'User'}&background=A855F7&color=fff`} alt="avatar" />
+              ) : (
+                <div className="w-10 h-10 bg-gray-200" />
+              )}
             </div>
           </div>
         </header>

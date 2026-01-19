@@ -23,8 +23,13 @@
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
+
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
+  }
+
+  .sidebar-white {
+    @apply bg-white border-r border-gray-100 shadow-sm;
   }
 }
