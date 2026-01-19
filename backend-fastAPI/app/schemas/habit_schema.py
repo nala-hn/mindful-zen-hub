@@ -9,9 +9,10 @@ class HabitBase(BaseModel):
 class HabitCreate(HabitBase):
     pass
 
-class HabitUpdate(HabitBase):
+class HabitUpdate(BaseModel):
     title: Optional[str] = None
     is_from_library: Optional[bool] = None
+    complete: Optional[bool] = None
 
 class Habit(HabitBase):
     id: str
