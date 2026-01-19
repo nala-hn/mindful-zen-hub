@@ -89,7 +89,7 @@ const UserLayout: React.FC = () => {
       </Sidebar>
 
       <main className="flex-1 flex flex-col overflow-hidden">
-        <header className="h-20 bg-white border-b border-gray-100 px-8 flex justify-between items-center z-10">
+        <header className="h-20 bg-white border-b border-gray-100 px-8 flex justify-between items-center z-0">
           <div>
             <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-0.5">Mindful Zen Hub</p>
             <h1 className="text-xl font-bold text-gray-800 italic">

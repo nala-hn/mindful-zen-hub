@@ -2,10 +2,17 @@ import React, { useState } from 'react';
 import ZenkichiAvatar from '../components/ZenkichiAvatar';
 import CalendarStrip from '../components/CalendarStrip';
 import { useAuthStore } from '../store/authStore';
+import HabitModal from '../components/HabitModal';
+import { HiPlus } from 'react-icons/hi';
 
 const DashboardPage: React.FC = () => {
   const { user } = useAuthStore();
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleHabitCreated = () => {
+    console.log("Habit berhasil dibuat, merefresh list...");
+  };
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
@@ -35,10 +42,27 @@ const DashboardPage: React.FC = () => {
            <CalendarStrip selectedDate={selectedDate} onDateChange={setSelectedDate} />
         </section>
         
-        <div className="bg-white rounded-[2rem] p-8 shadow-sm border border-gray-100 min-h-[300px]">
-           <h3 className="text-lg font-bold text-gray-800 mb-6">Daily Habits</h3>
+        <div className="bg-white rounded-[2rem] p-8 shadow-sm border border-gray-100 min-h-[400px]">
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="text-lg font-bold text-gray-800">Daily Habits</h3>
+            <button 
+              onClick={() => setIsModalOpen(true)}
+              className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-lg shadow-purple-100"
+            >
+              <HiPlus /> Tambah
+            </button>
+          </div>
+
+          <div className="space-y-4">
+          </div>
         </div>
       </div>
+
+      <HabitModal 
+        show={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        onSuccess={handleHabitCreated}
+      />
     </div>
   );
 };

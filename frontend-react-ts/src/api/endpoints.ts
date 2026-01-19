@@ -18,6 +18,12 @@ export const apiService = {
   getUserDetail: (userId: string) => 
     api.get(`/users/browse-detail/${userId}`),
 
+  createHabit: (title: string) => 
+  api.post('/habits/create', {
+    title: title,
+    is_from_library: null
+  }),
+
   getHabits: (userId: string) => 
     api.get(`/habits/browse-all/${userId}`),
 
