@@ -24,8 +24,8 @@ export const apiService = {
     is_from_library: null
   }),
 
-  getHabits: (userId: string) => 
-    api.get(`/habits/browse-all/${userId}`),
+  getHabitsByDate: (date: string) => 
+  api.get(`/habits/browse?filter_date=${date}`),
 
   getHabitLogs: (userId: string, date: string) => 
     api.get(`/habit-logs/browse-date/${userId}?date=${date}`),

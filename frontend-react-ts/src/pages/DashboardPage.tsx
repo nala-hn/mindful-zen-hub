@@ -1,67 +1,127 @@
-import React, { useState } from 'react';
-import ZenkichiAvatar from '../components/ZenkichiAvatar';
+import React, { useState, useEffect, useCallback } from 'react';
+import { format } from 'date-fns';
+import { HiPlus, HiCheckCircle, HiOutlineXCircle } from 'react-icons/hi';
 import CalendarStrip from '../components/CalendarStrip';
-import { useAuthStore } from '../store/authStore';
 import HabitModal from '../components/HabitModal';
-import { HiPlus } from 'react-icons/hi';
+import ZenkichiAvatar from '../components/ZenkichiAvatar';
+import { useAuthStore } from '../store/authStore';
+import { apiService } from '../api/endpoints';
 
 const DashboardPage: React.FC = () => {
   const { user } = useAuthStore();
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [habits, setHabits] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const handleHabitCreated = () => {
-    console.log("Habit berhasil dibuat, merefresh list...");
-  };
+  const fetchHabits = useCallback(async () => {
+    setLoading(true);
+    try {
+      const dateString = format(selectedDate, 'yyyy-MM-dd');
+      const response = await apiService.getHabitsByDate(dateString);
+      setHabits(response.data.data || []);
+    } catch (err) {
+      console.error("Gagal mengambil habits:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, [selectedDate]);
+
+  useEffect(() => {
+    fetchHabits();
+  }, [fetchHabits]);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
-      <div className="md:col-span-8 space-y-6">
-        <div className="bg-white rounded-[2rem] p-8 shadow-sm border border-gray-100 text-center">
-          <ZenkichiAvatar status={user?.avatar_status || 'stable'} />
-          <h2 className="mt-4 text-2xl font-black text-gray-800 tracking-tight">
-            {user?.name}
-          </h2>
-          <p className="text-gray-400 text-sm font-medium">Mindful Explorer</p>
-          
-          <div className="grid grid-cols-2 gap-4 mt-8 pt-8 border-t border-gray-50">
-            <div>
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Streak</p>
-              <p className="text-xl font-bold text-orange-600">{user?.streak || 0}d</p>
-            </div>
-            <div>
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Level</p>
-              <p className="text-xl font-bold text-purple-600">Novice</p>
-            </div>
+      <div className="md:col-span-8">
+        <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-gray-100 text-center sticky top-8">
+          <ZenkichiAvatar status={user?.avatar_status || 'stable'} size="lg" />
+          <h2 className="mt-6 text-2xl font-black text-gray-800 tracking-tight">{user?.name}</h2>
+          <div className="mt-8 pt-8 border-t border-gray-50 grid grid-cols-2 gap-4">
+             <div className="bg-orange-50 p-3 rounded-2xl">
+                <p className="text-[10px] font-bold text-orange-400 uppercase">Streak</p>
+                <p className="text-xl font-black text-orange-600">{user?.streak || 0}</p>
+             </div>
+             <div className="bg-purple-50 p-3 rounded-2xl">
+                <p className="text-[10px] font-bold text-purple-400 uppercase">Habits</p>
+                <p className="text-xl font-black text-purple-600">{habits.length}</p>
+             </div>
           </div>
         </div>
       </div>
 
       <div className="md:col-span-8 space-y-6">
-        <section className="bg-white rounded-[2rem] p-6 shadow-sm border border-gray-100">
-           <CalendarStrip selectedDate={selectedDate} onDateChange={setSelectedDate} />
+        <section className="bg-white rounded-[2.5rem] p-6 shadow-sm border border-gray-100">
+          <CalendarStrip selectedDate={selectedDate} onDateChange={setSelectedDate} />
         </section>
-        
-        <div className="bg-white rounded-[2rem] p-8 shadow-sm border border-gray-100 min-h-[400px]">
-          <div className="flex justify-between items-center mb-6">
-            <h3 className="text-lg font-bold text-gray-800">Daily Habits</h3>
+
+        <section className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-gray-100 min-h-[400px]">
+          <div className="flex justify-between items-center mb-8">
+            <div>
+              <h3 className="text-xl font-black text-gray-800">Daily Habits</h3>
+              <p className="text-sm text-gray-400 font-medium">{format(selectedDate, 'eeee, dd MMM')}</p>
+            </div>
             <button 
               onClick={() => setIsModalOpen(true)}
-              className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-lg shadow-purple-100"
+              className="p-3 bg-purple-600 hover:bg-purple-700 text-white rounded-2xl transition-all shadow-lg shadow-purple-100"
             >
-              <HiPlus /> Tambah
+              <HiPlus className="text-xl" />
             </button>
           </div>
 
-          <div className="space-y-4">
-          </div>
-        </div>
+          {loading ? (
+            <div className="flex justify-center py-20">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+            </div>
+          ) : habits.length > 0 ? (
+            <div className="grid gap-4">
+              {habits.map((habit: any) => (
+                <div 
+                  key={habit.id} 
+                  className={`group flex items-center justify-between p-5 rounded-[1.5rem] border transition-all duration-300 ${
+                    habit.is_completed 
+                    ? 'bg-green-50/50 border-green-100' 
+                    : 'bg-gray-50 border-transparent hover:border-purple-100 hover:bg-white hover:shadow-md'
+                  }`}
+                >
+                  <div className="flex items-center gap-4">
+                    <button className="text-2xl transition-transform active:scale-90">
+                      {habit.is_completed ? (
+                        <HiCheckCircle className="text-green-500" />
+                      ) : (
+                        <HiOutlineXCircle className="text-gray-300 group-hover:text-purple-400" />
+                      )}
+                    </button>
+                    <span className={`font-bold tracking-tight ${habit.is_completed ? 'text-green-700/50 line-through' : 'text-gray-700'}`}>
+                      {habit.title}
+                    </span>
+                  </div>
+                  {habit.current_streak > 0 && (
+                    <span className="text-[10px] font-black bg-white px-2 py-1 rounded-lg shadow-sm text-orange-500 border border-orange-50">
+                      🔥 {habit.current_streak}
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-20 bg-gray-50 rounded-[2rem] border-2 border-dashed border-gray-200">
+              <p className="text-gray-400 font-medium">Belum ada habit untuk tanggal ini.</p>
+              <button 
+                onClick={() => setIsModalOpen(true)}
+                className="mt-4 text-purple-600 font-bold text-sm hover:underline"
+              >
+                + Buat Habit Pertama
+              </button>
+            </div>
+          )}
+        </section>
       </div>
 
       <HabitModal 
         show={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 
-        onSuccess={handleHabitCreated}
+        onSuccess={fetchHabits} 
       />
     </div>
   );
