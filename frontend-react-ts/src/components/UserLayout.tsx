@@ -4,6 +4,7 @@ import { HiChartPie, HiClock, HiUser, HiLogout, HiViewGridAdd } from 'react-icon
 import { useAuthStore } from '../store/authStore';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { apiService } from '../api/endpoints';
+import ZenkichiAvatar from '../components/ZenkichiAvatar';
 
 const UserLayout: React.FC = () => {
   const { user, setAuth, logout, userId } = useAuthStore();
@@ -40,33 +41,33 @@ const UserLayout: React.FC = () => {
       <Sidebar aria-label="Zen Sidebar" className="w-64 sidebar-white [&>div]:!bg-white">
         <div className="px-4 py-6 flex items-center gap-3">
           <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-purple-200">
-             <HiViewGridAdd className="text-xl" />
+            <HiViewGridAdd className="text-xl" />
           </div>
           <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-700 to-indigo-800">
             ZenHub
           </span>
         </div>
-        
+
         <SidebarItems className="mt-4">
           <SidebarItemGroup>
-            <SidebarItem 
-              icon={HiChartPie} 
+            <SidebarItem
+              icon={HiChartPie}
               active={isActive('/dashboard')}
               className={`cursor-pointer transition-all duration-200 ${isActive('/dashboard') ? 'bg-purple-50 text-purple-700' : 'text-gray-600'}`}
               onClick={() => navigate('/dashboard')}
             >
               Dashboard
             </SidebarItem>
-            <SidebarItem 
-              icon={HiClock} 
+            <SidebarItem
+              icon={HiClock}
               active={isActive('/focus')}
               className={`cursor-pointer transition-all duration-200 ${isActive('/focus') ? 'bg-purple-50 text-purple-700' : 'text-gray-600'}`}
               onClick={() => navigate('/focus')}
             >
               Focus Timer
             </SidebarItem>
-            <SidebarItem 
-              icon={HiUser} 
+            <SidebarItem
+              icon={HiUser}
               active={isActive('/profile')}
               className={`cursor-pointer transition-all duration-200 ${isActive('/profile') ? 'bg-purple-50 text-purple-700' : 'text-gray-600'}`}
               onClick={() => navigate('/profile')}
@@ -76,8 +77,8 @@ const UserLayout: React.FC = () => {
           </SidebarItemGroup>
 
           <SidebarItemGroup className="border-t border-gray-100 mt-4 pt-4">
-            <SidebarItem 
-              icon={HiLogout} 
+            <SidebarItem
+              icon={HiLogout}
               className="cursor-pointer text-gray-500 hover:text-red-600 hover:bg-red-50 transition-colors"
               onClick={handleLogout}
             >
@@ -100,21 +101,19 @@ const UserLayout: React.FC = () => {
             <div className="flex flex-col items-end">
               <span className="text-[10px] font-bold text-orange-500 uppercase tracking-tighter">Current Streak</span>
               <div className="flex items-center gap-1.5 bg-orange-50 px-3 py-1 rounded-full border border-orange-100">
-                <span className="text-lg">🔥</span>
-                <span className="font-bold text-orange-700">{user?.streak ?? 0} Hari</span>
+                <span className="font-bold text-orange-700">{user?.streak ?? 0} days</span>
               </div>
             </div>
-            
-            <div className="w-10 h-10 rounded-full bg-purple-100 border-2 border-white shadow-sm flex items-center justify-center overflow-hidden">
-              {user?.avatar_status === 'stable' ? (
-                <img src={`https://ui-avatars.com/api/?name=${user?.name || 'User'}&background=A855F7&color=fff`} alt="avatar" />
-              ) : (
-                <div className="w-10 h-10 bg-gray-200" />
-              )}
+
+            <div className="hover:scale-110 transition-transform duration-300">
+              <ZenkichiAvatar
+                status={user?.avatar_status || 'stable'}
+                size="sm"
+              />
             </div>
           </div>
         </header>
-        
+
         <div className="flex-1 overflow-y-auto p-8 bg-slate-50/50">
           <div className="max-w-5xl mx-auto">
             <Outlet />
