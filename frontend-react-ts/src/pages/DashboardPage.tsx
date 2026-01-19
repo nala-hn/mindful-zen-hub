@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { format } from 'date-fns';
-import { HiPlus, HiCheckCircle, HiOutlineXCircle } from 'react-icons/hi';
+import { HiPlus, HiCheckCircle, HiOutlineXCircle, HiChevronRight, HiTrash } from 'react-icons/hi';
 import CalendarStrip from '../components/CalendarStrip';
 import HabitModal from '../components/HabitModal';
 import ZenkichiAvatar from '../components/ZenkichiAvatar';
@@ -43,6 +43,24 @@ const DashboardPage: React.FC = () => {
       fetchHabits();
     } catch (err) {
       console.error("Gagal update status habit:", err);
+    }
+  };
+
+  const [swipedHabitId, setSwipedHabitId] = useState<string | null>(null);
+
+  const handleDeleteHabit = async (habit: any) => {
+    // Safety check tambahan
+    if (habit.complete) return;
+
+    if (window.confirm(`Yakin ingin menghapus habit "${habit.title}"?`)) {
+      try {
+        await apiService.deleteHabit(habit.id);
+        fetchHabits();
+      } catch (err) {
+        console.error("Gagal menghapus habit:", err);
+      } finally {
+        setSwipedHabitId(null);
+      }
     }
   };
 
@@ -91,39 +109,68 @@ const DashboardPage: React.FC = () => {
           ) : habits.length > 0 ? (
             <div className="grid gap-4">
               {habits.map((habit: any) => (
-                <div
-                  key={habit.id}
-                  className={`group flex items-center justify-between p-5 rounded-[1.5rem] border transition-all duration-300 ${habit.complete // Sesuaikan dengan key 'complete' dari backend
-                    ? 'bg-green-50/50 border-green-100'
-                    : 'bg-gray-50 border-transparent hover:border-purple-100 hover:bg-white hover:shadow-md'
-                    }`}
-                >
-                  <div className="flex items-center gap-4">
-                    <button
-                      onClick={() => handleToggleHabit(habit)}
-                      className="text-3xl transition-transform active:scale-90 focus:outline-none"
-                    >
-                      {habit.complete ? (
-                        <HiCheckCircle className="text-green-500 shadow-sm rounded-full" />
-                      ) : (
-                        <HiOutlineXCircle className="text-gray-300 group-hover:text-purple-400" />
-                      )}
-                    </button>
+                <div key={habit.id} className="relative overflow-hidden rounded-[1.5rem]">
 
-                    <span className={`font-bold tracking-tight transition-all ${habit.complete ? 'text-green-700/50 line-through' : 'text-gray-700'
-                      }`}>
-                      {habit.title}
-                    </span>
-                  </div>
-
-                  {habit.current_streak > 0 && (
-                    <div className="flex items-center gap-1 bg-white px-3 py-1 rounded-xl shadow-sm border border-orange-50">
-                      <span className="text-xs">🔥</span>
-                      <span className="text-[10px] font-black text-orange-600">
-                        {habit.current_streak}
-                      </span>
+                  {!habit.complete && (
+                    <div className="absolute inset-0 flex items-center justify-start pl-6 rounded-[2rem] bg-red-500">
+                      <button
+                        onClick={() => handleDeleteHabit(habit)}
+                        className="flex items-center gap-2 text-white font-black text-xs tracking-widest"
+                      >
+                        <HiTrash className="text-xl" />
+                        DELETE
+                      </button>
                     </div>
                   )}
+
+                  <div
+                    className={`
+                      relative flex items-center justify-between p-5 rounded-[1.5rem] border transition-all duration-300 ease-in-out
+                      ${habit.complete
+                        ? 'bg-green-50/50 border-green-100 cursor-default'
+                        : 'bg-white border-gray-100 cursor-pointer'
+                      } 
+                      ${swipedHabitId === habit.id && !habit.complete ? 'translate-x-28' : 'translate-x-0'}
+                    `}
+                    onClick={() => {
+                      if (!habit.complete) {
+                        setSwipedHabitId(swipedHabitId === habit.id ? null : habit.id);
+                      }
+                    }}
+                  >
+                    <div className="flex items-center gap-4">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleToggleHabit(habit);
+                        }}
+                        className="text-3xl focus:outline-none transition-transform active:scale-90"
+                      >
+                        {habit.complete ? (
+                          <HiCheckCircle className="text-green-500" />
+                        ) : (
+                          <HiOutlineXCircle className="text-gray-300 hover:text-purple-400" />
+                        )}
+                      </button>
+
+                      <div className="flex flex-col">
+                        <span className={`font-bold tracking-tight ${habit.complete ? 'text-green-700/50 line-through' : 'text-gray-700'}`}>
+                          {habit.title}
+                        </span>
+                        {!habit.complete && (
+                          <span className="text-[10px] text-gray-400 font-medium flex items-center gap-0.5">
+                            <HiChevronRight /> Geser untuk hapus
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {habit.current_streak > 0 && (
+                      <div className="flex items-center gap-1 bg-white px-2 py-1 rounded-lg shadow-sm border border-orange-50">
+                        <span className="text-[10px] font-black text-orange-600">🔥 {habit.current_streak}</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>

@@ -30,6 +30,9 @@ export const apiService = {
   updateHabitStatus: (habitId: string, payload: any) => 
   api.put(`/habits/update/${habitId}`, payload),
 
+  deleteHabit: (habitId: string) => 
+  api.delete(`/habits/delete/${habitId}`),
+
   getHabitLogs: (userId: string, date: string) => 
     api.get(`/habit-logs/browse-date/${userId}?date=${date}`),
 
